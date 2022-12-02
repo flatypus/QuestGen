@@ -47,6 +47,17 @@ impl Leitner {
         }
     }
 
+    fn get_question(self, topic: i32) -> Question {
+        for i in 0..self.questions.len() {
+            for question in &self.boxes[&i] {
+                if topic == -1 || question.topics.contains(&(topic as i64)) {
+                    return question.clone();
+                }
+            }
+        }
+        panic!("No questions found");
+    }
+
     pub fn __init__(mut self) {
         self.questions.sort_by_key(|q| q.topics.len());
         // update box numbers
@@ -64,4 +75,8 @@ fn main() {
         questions: questions,
     };
     leitner.__init__();
+    loop {
+        let question = leitner.get_question(-1);
+        println!("Question: {}", question.question);
+    }
 }
