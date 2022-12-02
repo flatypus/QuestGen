@@ -56,9 +56,9 @@ class Leitner:
                 if topic == -1 or topic in question["topics"]:
                     return question
 
-    def shift_question(self, question, box):
+    def move_question(self, question, box):
         box = max(0, box)
-        if not self.boxes:
+        if not self.boxes[box]:
             self.boxes[box] = []
         self.boxes[box].append(self.boxes[question["box"]].pop(
             self.boxes[question["box"]].index(question)))
@@ -67,10 +67,10 @@ class Leitner:
 
     def answer_question(self, question, answer):
         if (question["answer"] == answer):
-            self.shift_question(question, question["box"] + 1)
+            self.move_question(question, question["box"] + 1)
             return True
         else:
-            self.shift_question(question, question["box"] - 1)
+            self.move_question(question, question["box"] - 1)
             return False
 
 

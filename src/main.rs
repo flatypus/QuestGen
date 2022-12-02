@@ -2,10 +2,21 @@ use crate::set_up_graph::set_up_graph;
 use crate::set_up_graph::Node;
 use crate::set_up_questions::set_up_questions;
 use crate::set_up_questions::Question;
+use std::cmp::max;
 use std::collections::HashMap;
+use std::io::{self, Write};
 
 pub mod set_up_graph;
 pub mod set_up_questions;
+
+fn input(prompt: &str) -> String {
+    let mut s: String = String::new();
+    print!("{}", prompt);
+    io::stdout().flush().unwrap();
+    io::stdin().read_line(&mut s).unwrap();
+    s.trim().to_string()
+}
+
 #[derive(Debug, Clone)]
 struct Leitner {
     boxes: HashMap<usize, Vec<Question>>,
@@ -30,7 +41,7 @@ impl Leitner {
         // print!("Boxes: {:?}", self.boxes);
     }
 
-    fn print_stats(self) {
+    fn print_stats(&self) {
         for i in 0..self.boxes.len() {
             println!(
                 "Box number: {}. This box has at most {} questions",
@@ -47,7 +58,7 @@ impl Leitner {
         }
     }
 
-    fn get_question(self, topic: i32) -> Question {
+    fn get_question(&self, topic: i32) -> Question {
         for i in 0..self.questions.len() {
             for question in &self.boxes[&i] {
                 if topic == -1 || question.topics.contains(&(topic as i64)) {
@@ -58,25 +69,59 @@ impl Leitner {
         panic!("No questions found");
     }
 
-    pub fn __init__(mut self) {
+    fn move_question(&mut self, question: &Question, mut box_number: usize) {
+        box_number = max(box_number, 0);
+        let mut cloned_question = question.clone();
+        cloned_question.box_number = box_number;
+        self.boxes
+            .entry(box_number)
+            .or_insert(vec![])
+            .push(cloned_question);
+        // remove question from old box
+        for i in 0..self.boxes[&question.box_number].len() {
+            if self.boxes[&question.box_number][i] == question.clone() {
+                self.boxes.get_mut(&question.box_number).unwrap().remove(i);
+                break;
+            }
+        }
+    }
+
+    fn answer_question(&mut self, question: Question, answer: String) -> bool {
+        if question.answer == answer {
+            Self::move_question(self, &question, question.box_number + 1);
+            return true;
+        } else {
+            let target = if question.box_number > 0 { 0 } else { 1 };
+            Self::move_question(self, &question, target);
+            return false;
+        }
+    }
+
+    pub fn __init__(&mut self) {
         self.questions.sort_by_key(|q| q.topics.len());
         // update box numbers
-        Self::add_box_number(&mut self);
-        Self::print_stats(self);
+        Self::add_box_number(self);
+        Self::print_stats(&self);
     }
 }
 
 fn main() {
     let graph = set_up_graph();
     let questions: Vec<Question> = set_up_questions();
-    let leitner = Leitner {
+    let mut leitner = Leitner {
         boxes: HashMap::new(),
         graph: graph,
         questions: questions,
     };
     leitner.__init__();
-    loop {
-        let question = leitner.get_question(-1);
-        println!("Question: {}", question.question);
+    // leitner is immutable, so we need to clone it
+    // loop {
+    let question = leitner.get_question(-1);
+    let answer = input(&question.question);
+    if leitner.answer_question(question, answer.to_string()) {
+        println!("Correct!");
+    } else {
+        println!("Incorrect!");
     }
+    // }
 }

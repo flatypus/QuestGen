@@ -1,5 +1,5 @@
 // use std::collections::HashMap;
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Question {
     pub question: String,
     pub answer: String,
