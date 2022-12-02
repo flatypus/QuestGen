@@ -7,3 +7,11 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8.5"
+rocket = "0.5.0-rc.2"
+tokio = "1.21.2"
+futures = "0.3"
+
+[dependencies.mongodb]
+version = "2.3.1"
+default-features = false
+features = ["tokio-runtime"]

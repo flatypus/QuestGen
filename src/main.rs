@@ -2,12 +2,20 @@ use crate::set_up_graph::set_up_graph;
 use crate::set_up_graph::Node;
 use crate::set_up_questions::set_up_questions;
 use crate::set_up_questions::Question;
+// This trait is required to use `try_next()` on the mongo cursor
+use futures::stream::TryStreamExt;
+use mongodb::{bson::doc, options::FindOptions};
+
+
+use mongodb::bson::{Document};
 use std::cmp::max;
 use std::collections::HashMap;
 use std::io::{self, Write};
+use tokio::task;
 
-pub mod set_up_graph;
-pub mod set_up_questions;
+mod mongo_class;
+mod set_up_graph;
+mod set_up_questions;
 
 fn input(prompt: &str) -> String {
     let mut s: String = String::new();
@@ -105,23 +113,33 @@ impl Leitner {
     }
 }
 
-fn main() {
-    let graph = set_up_graph();
-    let questions: Vec<Question> = set_up_questions();
-    let mut leitner = Leitner {
-        boxes: HashMap::new(),
-        graph: graph,
-        questions: questions,
-    };
-    leitner.__init__();
-    // leitner is immutable, so we need to clone it
-    // loop {
-    let question = leitner.get_question(-1);
-    let answer = input(&question.question);
-    if leitner.answer_question(question, answer.to_string()) {
-        println!("Correct!");
-    } else {
-        println!("Incorrect!");
-    }
+
+#[tokio::main]
+async fn main() {
+    //     let graph = set_up_graph();
+    //     let questions: Vec<Question> = set_up_questions();
+    //     let mut leitner = Leitner {
+    //         boxes: HashMap::new(),
+    //         graph: graph,
+    //         questions: questions,
+    //     };
+    //     leitner.__init__();
+    //     // leitner is immutable, so we need to clone it
+    //     // loop {
+    //     let question = leitner.get_question(-1);
+    //     let answer = input(&question.question);
+    //     if leitner.answer_question(question, answer.to_string()) {
+    //         println!("Correct!");
+    //     } else {
+    //         println!("Incorrect!");
+    //     }
+    let db = mongo_class::set_up_database().await;
+    print!("Database: {:?}", db);
+    let collection = db.collection::<Document>("accounts");
+    let mut cursor = collection.find(None, None).await.unwrap();
+
+    // Iterate over the results of the cursor.
+    // while let Ok(Some(document)) = cursor.try_next().await{
+    //     println!("Found document {:?}", document);
     // }
 }
